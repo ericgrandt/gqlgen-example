@@ -1,0 +1,9 @@
+type Test {
+  id: ID!
+  text: String!
+  user: User!
+}
+
+extend type Mutation {
+  createTest(input: String!): Test!
+}
