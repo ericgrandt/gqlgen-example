@@ -54,8 +54,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Todos func(childComplexity int, pageSize *int32, pageNum *int32) int
-		User  func(childComplexity int) int
+		Todos func(childComplexity int, pageSize int32, pageNum int32) int
+		User  func(childComplexity int, id int32) int
 	}
 
 	Tag struct {
@@ -83,8 +83,8 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (model.User, error)
 }
 type QueryResolver interface {
-	Todos(ctx context.Context, pageSize *int32, pageNum *int32) ([]model.Todo, error)
-	User(ctx context.Context) (model.User, error)
+	Todos(ctx context.Context, pageSize int32, pageNum int32) ([]model.Todo, error)
+	User(ctx context.Context, id int32) (model.User, error)
 }
 type TodoResolver interface {
 	User(ctx context.Context, obj *model.Todo) (model.User, error)
@@ -155,14 +155,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.Todos(childComplexity, args["pageSize"].(*int32), args["pageNum"].(*int32)), true
+		return e.complexity.Query.Todos(childComplexity, args["pageSize"].(int32), args["pageNum"].(int32)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
 		}
 
-		return e.complexity.Query.User(childComplexity), true
+		args, err := ec.field_Query_user_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.User(childComplexity, args["id"].(int32)), true
 
 	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
@@ -368,7 +373,7 @@ input NewTodo {
 }
 
 extend type Query {
-  todos(pageSize: Int = 10, pageNum: Int = 1): [Todo!]!
+  todos(pageSize: Int! = 10, pageNum: Int! = 1): [Todo!]!
 }
 
 extend type Mutation {
@@ -385,7 +390,7 @@ input NewUser {
 }
 
 extend type Query {
-  user: User!
+  user(id: Int!): User!
 }
 
 extend type Mutation {
@@ -509,26 +514,49 @@ func (ec *executionContext) field_Query_todos_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_todos_argsPageSize(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*int32, error) {
+) (int32, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageSize"))
 	if tmp, ok := rawArgs["pageSize"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+		return ec.unmarshalNInt2int32(ctx, tmp)
 	}
 
-	var zeroVal *int32
+	var zeroVal int32
 	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Query_todos_argsPageNum(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*int32, error) {
+) (int32, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pageNum"))
 	if tmp, ok := rawArgs["pageNum"]; ok {
-		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
+		return ec.unmarshalNInt2int32(ctx, tmp)
 	}
 
-	var zeroVal *int32
+	var zeroVal int32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_user_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_user_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int32, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNInt2int32(ctx, tmp)
+	}
+
+	var zeroVal int32
 	return zeroVal, nil
 }
 
@@ -835,7 +863,7 @@ func (ec *executionContext) _Query_todos(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Todos(rctx, fc.Args["pageSize"].(*int32), fc.Args["pageNum"].(*int32))
+		return ec.resolvers.Query().Todos(rctx, fc.Args["pageSize"].(int32), fc.Args["pageNum"].(int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -900,7 +928,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx)
+		return ec.resolvers.Query().User(rctx, fc.Args["id"].(int32))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -917,7 +945,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	return ec.marshalNUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -932,6 +960,17 @@ func (ec *executionContext) fieldContext_Query_user(_ context.Context, field gra
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_user_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -4231,6 +4270,22 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v any) (int32, error) {
+	res, err := graphql.UnmarshalInt32(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt32(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNNewTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐNewTag(ctx context.Context, v any) (model.NewTag, error) {
 	res, err := ec.unmarshalInputNewTag(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4608,24 +4663,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = sel
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
-	return res
-}
-
-func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalInt32(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	_ = sel
-	_ = ctx
-	res := graphql.MarshalInt32(*v)
 	return res
 }
 

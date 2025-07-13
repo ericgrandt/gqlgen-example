@@ -16,15 +16,32 @@ func NewUserData(db *sql.DB) UserData {
 	}
 }
 
-func (data UserData) CreateUser(user model.User) error {
-	stmt, err := data.db.Prepare("INSERT INTO user(name) VALUES (?)")
+func (data UserData) CreateUser(input model.NewUser) (model.User, error) {
+	stmt, err := data.db.Prepare("INSERT INTO user(name) VALUES (?) RETURNING *")
 	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(user.Name)
-	if err != nil {
-		return err
+		return model.User{}, err
 	}
 
-	return nil
+	var user model.User
+	err = stmt.QueryRow(input.Name).Scan(&user.ID, &user.Name)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func (data UserData) GetUser(userID string) (model.User, error) {
+	stmt, err := data.db.Prepare("SELECT * FROM user WHERE id = ?")
+	if err != nil {
+		return model.User{}, err
+	}
+
+	var user model.User
+	err = stmt.QueryRow(userID).Scan(&user.ID, &user.Name)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
 }

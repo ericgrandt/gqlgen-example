@@ -12,7 +12,7 @@ input NewTodo {
 }
 
 extend type Query {
-  todos(pageSize: Int = 10, pageNum: Int = 1): [Todo!]!
+  todos(pageSize: Int! = 10, pageNum: Int! = 1): [Todo!]!
 }
 
 extend type Mutation {

@@ -40,7 +40,7 @@ func createTodoTable(db *sql.DB) {
 	stmt := `
     CREATE TABLE IF NOT EXISTS todo (
         id INTEGER NOT NULL PRIMARY KEY,
-		user_id int NOT NULL,
+		user_id INTEGER NOT NULL,
 		value VARCHAR NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES user(id)
     );

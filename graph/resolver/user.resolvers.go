@@ -6,28 +6,27 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ericgrandt/gqlgen-example/graph/model"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (model.User, error) {
-	user := model.User{
-		Name: input.Name,
-	}
-
-	err := r.userData.CreateUser(user)
+	user, err := r.userData.CreateUser(input)
 	if err != nil {
-		// For simplicity, just panic. In a real app, bubble the error up and handle in a shared/common way
-		// or handle here
-		panic(err)
+		return model.User{}, err
 	}
 
 	return user, nil
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context) (model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+func (r *queryResolver) User(ctx context.Context, id int32) (model.User, error) {
+	panic("123")
+	//user, err := r.userData.GetUser(id)
+	//if err != nil {
+	//	return model.User{}, err
+	//}
+
+	// return user, nil
 }

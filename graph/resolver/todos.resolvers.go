@@ -16,10 +16,10 @@ import (
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (model.Todo, error) {
-	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100))
+	randNumber, _ := rand.Int(rand.Reader, big.NewInt(10000))
 	todo := model.Todo{
 		Text:   input.Text,
-		ID:     fmt.Sprintf("T%d", randNumber),
+		ID:     randNumber.String(),
 		UserID: input.UserID,
 	}
 
@@ -27,6 +27,7 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 	if err != nil {
 		panic(err)
 	}
+
 	_, err = stmt.Exec(todo.ID, todo.Text, todo.UserID)
 	if err != nil {
 		panic(err)
@@ -36,15 +37,15 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 }
 
 // Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context, pageSize *int32, pageNum *int32) ([]model.Todo, error) {
+func (r *queryResolver) Todos(ctx context.Context, pageSize int32, pageNum int32) ([]model.Todo, error) {
 	stmt, _ := r.db.Prepare("SELECT * FROM todo LIMIT ? OFFSET ?")
 	defer stmt.Close()
 
-	rows, _ := stmt.Query(pageSize, *pageSize*(*pageNum-1))
+	rows, _ := stmt.Query(pageSize, pageSize*(pageNum-1))
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
-		rows.Scan(&todo.ID, &todo.Text, &todo.UserID)
+		rows.Scan(&todo.ID, &todo.UserID, &todo.Text)
 		todos = append(todos, todo)
 	}
 	return todos, nil
@@ -52,10 +53,8 @@ func (r *queryResolver) Todos(ctx context.Context, pageSize *int32, pageNum *int
 
 // User is the resolver for the user field.
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (model.User, error) {
-	return model.User{
-		ID:   obj.UserID,
-		Name: "user " + obj.UserID,
-	}, nil
+	fmt.Println(obj.UserID)
+	return r.userData.GetUser(obj.UserID)
 }
 
 // Todo returns generated.TodoResolver implementation.
