@@ -55,7 +55,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Todos func(childComplexity int, pageSize int32, pageNum int32) int
-		User  func(childComplexity int, id int32) int
+		User  func(childComplexity int, id string) int
 	}
 
 	Tag struct {
@@ -84,7 +84,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Todos(ctx context.Context, pageSize int32, pageNum int32) ([]model.Todo, error)
-	User(ctx context.Context, id int32) (model.User, error)
+	User(ctx context.Context, id string) (model.User, error)
 }
 type TodoResolver interface {
 	User(ctx context.Context, obj *model.Todo) (model.User, error)
@@ -167,7 +167,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(int32)), true
+		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
 
 	case "Tag.id":
 		if e.complexity.Tag.ID == nil {
@@ -390,7 +390,7 @@ input NewUser {
 }
 
 extend type Query {
-  user(id: Int!): User!
+  user(id: String!): User!
 }
 
 extend type Mutation {
@@ -550,13 +550,13 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_user_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (int32, error) {
+) (string, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNInt2int32(ctx, tmp)
+		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
-	var zeroVal int32
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -928,7 +928,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, fc.Args["id"].(int32))
+		return ec.resolvers.Query().User(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

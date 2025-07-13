@@ -21,12 +21,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context, id int32) (model.User, error) {
-	panic("123")
-	//user, err := r.userData.GetUser(id)
-	//if err != nil {
-	//	return model.User{}, err
-	//}
-
-	// return user, nil
+func (r *queryResolver) User(ctx context.Context, id string) (model.User, error) {
+	return r.userData.GetUser(id)
 }
