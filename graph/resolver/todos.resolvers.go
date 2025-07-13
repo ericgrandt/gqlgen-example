@@ -23,24 +23,29 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 		UserID: input.UserID,
 	}
 
-	stmt, err := r.db.Prepare("INSERT INTO todo(id, value) VALUES (?, ?)")
+	stmt, err := r.db.Prepare("INSERT INTO todo(id, value, user_id) VALUES (?, ?, ?)")
 	if err != nil {
 		panic(err)
 	}
-	_, _ = stmt.Exec(todo.ID, todo.Text)
+	_, err = stmt.Exec(todo.ID, todo.Text, todo.UserID)
+	if err != nil {
+		panic(err)
+	}
 
 	return todo, nil
 }
 
 // Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]model.Todo, error) {
-	stmt, _ := r.db.Prepare("SELECT * FROM todo")
+func (r *queryResolver) Todos(ctx context.Context, pageSize *int32, pageNum *int32) ([]model.Todo, error) {
+	stmt, _ := r.db.Prepare("SELECT * FROM todo LIMIT ? OFFSET ?")
 	defer stmt.Close()
-	rows, _ := stmt.Query()
+
+	offsetVal := *pageSize * (*pageNum - 1)
+	rows, _ := stmt.Query(pageSize, offsetVal)
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
-		rows.Scan(&todo.ID, &todo.Text)
+		rows.Scan(&todo.ID, &todo.Text, &todo.UserID)
 		todos = append(todos, todo)
 	}
 	return todos, nil
@@ -58,3 +63,15 @@ func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, 
 func (r *Resolver) Todo() generated.TodoResolver { return &todoResolver{r} }
 
 type todoResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *todoResolver) Tags(ctx context.Context, obj *model.Todo, count *int32) ([]model.Tag, error) {
+	return []model.Tag{}, nil
+}
+*/

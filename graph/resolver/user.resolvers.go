@@ -6,10 +6,32 @@ package resolver
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
+	"math/big"
 
 	"github.com/ericgrandt/gqlgen-example/graph/model"
 )
+
+// CreateUser is the resolver for the createUser field.
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
+	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100000))
+	user := &model.User{
+		ID:   fmt.Sprint(randNumber),
+		Name: input.Name,
+	}
+
+	stmt, err := r.db.Prepare("INSERT INTO user(id, name) VALUES (?, ?)")
+	if err != nil {
+		panic(err)
+	}
+	_, err = stmt.Exec(user.ID, user.Name)
+	if err != nil {
+		panic(err)
+	}
+
+	return user, nil
+}
 
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context) (*model.User, error) {

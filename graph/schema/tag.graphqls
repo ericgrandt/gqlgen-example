@@ -1,0 +1,14 @@
+type Tag {
+  id: ID!
+  tagName: String!
+  user: User!
+}
+
+input NewTag {
+  tagName: String!
+  userId: String!
+}
+
+extend type Mutation {
+  createTag(input: NewTag!): Tag!
+}
