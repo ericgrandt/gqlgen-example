@@ -11,6 +11,7 @@ import (
 	"github.com/ericgrandt/gqlgen-example/database"
 	"github.com/ericgrandt/gqlgen-example/graph/generated"
 	"github.com/ericgrandt/gqlgen-example/graph/resolver"
+	"github.com/ericgrandt/gqlgen-example/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -26,6 +27,7 @@ func main() {
 	defer db.Close()
 
 	router := chi.NewRouter()
+	router.Use(middleware.AuthMiddleware)
 
 	srv := handler.New(
 		generated.NewExecutableSchema(
