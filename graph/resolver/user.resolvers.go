@@ -14,9 +14,9 @@ import (
 )
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (model.User, error) {
 	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100000))
-	user := &model.User{
+	user := model.User{
 		ID:   fmt.Sprint(randNumber),
 		Name: input.Name,
 	}
@@ -34,6 +34,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 }
 
 // User is the resolver for the user field.
-func (r *queryResolver) User(ctx context.Context) (*model.User, error) {
+func (r *queryResolver) User(ctx context.Context) (model.User, error) {
 	panic(fmt.Errorf("not implemented: User - user"))
 }

@@ -15,9 +15,9 @@ import (
 )
 
 // CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (model.Todo, error) {
 	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100))
-	todo := &model.Todo{
+	todo := model.Todo{
 		Text:   input.Text,
 		ID:     fmt.Sprintf("T%d", randNumber),
 		UserID: input.UserID,
@@ -40,8 +40,7 @@ func (r *queryResolver) Todos(ctx context.Context, pageSize *int32, pageNum *int
 	stmt, _ := r.db.Prepare("SELECT * FROM todo LIMIT ? OFFSET ?")
 	defer stmt.Close()
 
-	offsetVal := *pageSize * (*pageNum - 1)
-	rows, _ := stmt.Query(pageSize, offsetVal)
+	rows, _ := stmt.Query(pageSize, *pageSize*(*pageNum-1))
 	var todos []model.Todo
 	for rows.Next() {
 		var todo model.Todo
@@ -52,8 +51,8 @@ func (r *queryResolver) Todos(ctx context.Context, pageSize *int32, pageNum *int
 }
 
 // User is the resolver for the user field.
-func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
-	return &model.User{
+func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (model.User, error) {
+	return model.User{
 		ID:   obj.UserID,
 		Name: "user " + obj.UserID,
 	}, nil
@@ -63,15 +62,3 @@ func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, 
 func (r *Resolver) Todo() generated.TodoResolver { return &todoResolver{r} }
 
 type todoResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *todoResolver) Tags(ctx context.Context, obj *model.Todo, count *int32) ([]model.Tag, error) {
-	return []model.Tag{}, nil
-}
-*/

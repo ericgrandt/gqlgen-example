@@ -14,9 +14,9 @@ import (
 )
 
 // CreateTag is the resolver for the createTag field.
-func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (*model.Tag, error) {
+func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (model.Tag, error) {
 	randNumber, _ := rand.Int(rand.Reader, big.NewInt(10000))
-	tag := &model.Tag{
+	tag := model.Tag{
 		ID:      fmt.Sprintf("%d", randNumber),
 		TagName: input.TagName,
 		UserID:  input.UserID,

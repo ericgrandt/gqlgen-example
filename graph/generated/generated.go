@@ -78,16 +78,16 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateTag(ctx context.Context, input model.NewTag) (*model.Tag, error)
-	CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error)
-	CreateUser(ctx context.Context, input model.NewUser) (*model.User, error)
+	CreateTag(ctx context.Context, input model.NewTag) (model.Tag, error)
+	CreateTodo(ctx context.Context, input model.NewTodo) (model.Todo, error)
+	CreateUser(ctx context.Context, input model.NewUser) (model.User, error)
 }
 type QueryResolver interface {
 	Todos(ctx context.Context, pageSize *int32, pageNum *int32) ([]model.Todo, error)
-	User(ctx context.Context) (*model.User, error)
+	User(ctx context.Context) (model.User, error)
 }
 type TodoResolver interface {
-	User(ctx context.Context, obj *model.Todo) (*model.User, error)
+	User(ctx context.Context, obj *model.Todo) (model.User, error)
 }
 
 type executableSchema struct {
@@ -658,9 +658,9 @@ func (ec *executionContext) _Mutation_createTag(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Tag)
+	res := resTmp.(model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -721,9 +721,9 @@ func (ec *executionContext) _Mutation_createTodo(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Todo)
+	res := resTmp.(model.Todo)
 	fc.Result = res
-	return ec.marshalNTodo2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx, field.Selections, res)
+	return ec.marshalNTodo2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createTodo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -786,9 +786,9 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -912,9 +912,9 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1363,9 +1363,9 @@ func (ec *executionContext) _Todo_user(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Todo_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4266,16 +4266,6 @@ func (ec *executionContext) marshalNTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexa
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Tag(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNTodo2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx context.Context, sel ast.SelectionSet, v model.Todo) graphql.Marshaler {
 	return ec._Todo(ctx, sel, &v)
 }
@@ -4322,16 +4312,6 @@ func (ec *executionContext) marshalNTodo2ᚕgithubᚗcomᚋericgrandtᚋgqlgen�
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalNTodo2ᚖgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx context.Context, sel ast.SelectionSet, v *model.Todo) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Todo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
