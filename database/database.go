@@ -25,7 +25,7 @@ func GetOrCreateDatabase(dbName string) *sql.DB {
 func createUserTable(db *sql.DB) {
 	stmt := `
     CREATE TABLE IF NOT EXISTS user (
-        id INT NOT NULL PRIMARY KEY,
+        id INTEGER NOT NULL PRIMARY KEY,
 		name TEXT NOT NULL
     );
     `
@@ -39,7 +39,7 @@ func createUserTable(db *sql.DB) {
 func createTodoTable(db *sql.DB) {
 	stmt := `
     CREATE TABLE IF NOT EXISTS todo (
-        id INT NOT NULL PRIMARY KEY,
+        id INTEGER NOT NULL PRIMARY KEY,
 		user_id int NOT NULL,
 		value VARCHAR NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES user(id)

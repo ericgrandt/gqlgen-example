@@ -27,7 +27,13 @@ func main() {
 
 	router := chi.NewRouter()
 
-	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: resolver.NewResolver(db)}))
+	srv := handler.New(
+		generated.NewExecutableSchema(
+			generated.Config{
+				Resolvers: resolver.NewResolver(db, database.NewUserData(db)),
+			},
+		),
+	)
 	srv.AddTransport(transport.POST{})
 	router.Handle("/", playground.Handler("GraphQL Playground", "/query"))
 	router.Handle("/query", srv)

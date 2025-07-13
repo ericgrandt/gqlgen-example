@@ -3,18 +3,18 @@ package resolver
 
 import (
 	"database/sql"
+
+	"github.com/ericgrandt/gqlgen-example/database"
 )
 
-// This file will not be regenerated automatically.
-//
-// It serves as dependency injection for your app, add any dependencies you require here.
-
 type Resolver struct {
-	db *sql.DB
+	db       *sql.DB
+	userData database.UserData
 }
 
-func NewResolver(db *sql.DB) *Resolver {
+func NewResolver(db *sql.DB, userData database.UserData) *Resolver {
 	return &Resolver{
-		db: db,
+		db:       db,
+		userData: userData,
 	}
 }
