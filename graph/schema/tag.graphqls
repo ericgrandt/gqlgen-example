@@ -6,7 +6,6 @@ type Tag {
 
 input NewTag {
   tagName: String!
-  userId: String!
 }
 
 extend type Mutation {

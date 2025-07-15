@@ -5,16 +5,6 @@ package model
 type Mutation struct {
 }
 
-type NewTag struct {
-	TagName string `json:"tagName"`
-	UserID  string `json:"userId"`
-}
-
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
-}
-
 type NewUser struct {
 	Name string `json:"name"`
 }

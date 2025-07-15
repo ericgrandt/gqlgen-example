@@ -11,6 +11,7 @@ import (
 	"math/big"
 
 	"github.com/ericgrandt/gqlgen-example/graph/model"
+	"github.com/ericgrandt/gqlgen-example/middleware"
 )
 
 // CreateTag is the resolver for the createTag field.
@@ -19,7 +20,7 @@ func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (m
 	tag := model.Tag{
 		ID:      fmt.Sprintf("%d", randNumber),
 		TagName: input.TagName,
-		UserID:  input.UserID,
+		UserID:  middleware.GetUserContext(ctx).ID,
 	}
 
 	stmt, err := r.db.Prepare("INSERT INTO tag(id, user_id, tag_name) VALUES (?, ?, ?)")

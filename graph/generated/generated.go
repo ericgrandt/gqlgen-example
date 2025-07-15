@@ -352,7 +352,6 @@ type Mutation
 
 input NewTag {
   tagName: String!
-  userId: String!
 }
 
 extend type Mutation {
@@ -369,7 +368,6 @@ extend type Mutation {
 
 input NewTodo {
   text: String!
-  userId: String!
 }
 
 extend type Query {
@@ -3472,7 +3470,7 @@ func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj any) (
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"tagName", "userId"}
+	fieldsInOrder := [...]string{"tagName"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3486,13 +3484,6 @@ func (ec *executionContext) unmarshalInputNewTag(ctx context.Context, obj any) (
 				return it, err
 			}
 			it.TagName = data
-		case "userId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UserID = data
 		}
 	}
 
@@ -3506,7 +3497,7 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"text", "userId"}
+	fieldsInOrder := [...]string{"text"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3520,13 +3511,6 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) 
 				return it, err
 			}
 			it.Text = data
-		case "userId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UserID = data
 		}
 	}
 
