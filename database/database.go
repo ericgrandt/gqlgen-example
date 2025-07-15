@@ -53,7 +53,34 @@ func createTodoTable(db *sql.DB) {
 }
 
 func createTagTable(db *sql.DB) {
+	stmt := `
+    CREATE TABLE IF NOT EXISTS tag (
+        id INTEGER NOT NULL PRIMARY KEY,
+		user_id INTEGER NOT NULL,
+		tag_name VARCHAR NOT NULL,
+		FOREIGN KEY(user_id) REFERENCES user(id)
+    );
+    `
+
+	_, err := db.Exec(stmt)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func createTodoTagTable(db *sql.DB) {
+	stmt := `
+    CREATE TABLE IF NOT EXISTS todo_tag (
+        id INTEGER NOT NULL PRIMARY KEY,
+		todo_id INTEGER NOT NULL,
+		tag_id INTEGER NOT NULL,
+		FOREIGN KEY(todo_id) REFERENCES todo(id)
+		FOREIGN KEY(tag_id) REFERENCES tag(id)
+    );
+    `
+
+	_, err := db.Exec(stmt)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

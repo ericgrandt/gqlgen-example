@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Todo() TodoResolver
+	TodoTag() TodoTagResolver
 }
 
 type DirectiveRoot struct {
@@ -48,9 +49,10 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreateTag  func(childComplexity int, input model.NewTag) int
-		CreateTodo func(childComplexity int, input model.NewTodo) int
-		CreateUser func(childComplexity int, input model.NewUser) int
+		CreateTag     func(childComplexity int, input model.NewTag) int
+		CreateTodo    func(childComplexity int, input model.NewTodo) int
+		CreateTodoTag func(childComplexity int, input model.NewTodoTag) int
+		CreateUser    func(childComplexity int, input model.NewUser) int
 	}
 
 	Query struct {
@@ -67,8 +69,15 @@ type ComplexityRoot struct {
 	Todo struct {
 		Done func(childComplexity int) int
 		ID   func(childComplexity int) int
+		Tags func(childComplexity int) int
 		Text func(childComplexity int) int
 		User func(childComplexity int) int
+	}
+
+	TodoTag struct {
+		ID   func(childComplexity int) int
+		Tag  func(childComplexity int) int
+		Todo func(childComplexity int) int
 	}
 
 	User struct {
@@ -79,6 +88,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateTag(ctx context.Context, input model.NewTag) (model.Tag, error)
+	CreateTodoTag(ctx context.Context, input model.NewTodoTag) (model.TodoTag, error)
 	CreateTodo(ctx context.Context, input model.NewTodo) (model.Todo, error)
 	CreateUser(ctx context.Context, input model.NewUser) (model.User, error)
 }
@@ -88,6 +98,11 @@ type QueryResolver interface {
 }
 type TodoResolver interface {
 	User(ctx context.Context, obj *model.Todo) (model.User, error)
+	Tags(ctx context.Context, obj *model.Todo) ([]model.TodoTag, error)
+}
+type TodoTagResolver interface {
+	Todo(ctx context.Context, obj *model.TodoTag) (model.Todo, error)
+	Tag(ctx context.Context, obj *model.TodoTag) (model.Tag, error)
 }
 
 type executableSchema struct {
@@ -132,6 +147,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateTodo(childComplexity, args["input"].(model.NewTodo)), true
+
+	case "Mutation.createTodoTag":
+		if e.complexity.Mutation.CreateTodoTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTodoTag_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTodoTag(childComplexity, args["input"].(model.NewTodoTag)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -204,6 +231,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Todo.ID(childComplexity), true
 
+	case "Todo.tags":
+		if e.complexity.Todo.Tags == nil {
+			break
+		}
+
+		return e.complexity.Todo.Tags(childComplexity), true
+
 	case "Todo.text":
 		if e.complexity.Todo.Text == nil {
 			break
@@ -217,6 +251,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Todo.User(childComplexity), true
+
+	case "TodoTag.id":
+		if e.complexity.TodoTag.ID == nil {
+			break
+		}
+
+		return e.complexity.TodoTag.ID(childComplexity), true
+
+	case "TodoTag.tag":
+		if e.complexity.TodoTag.Tag == nil {
+			break
+		}
+
+		return e.complexity.TodoTag.Tag(childComplexity), true
+
+	case "TodoTag.todo":
+		if e.complexity.TodoTag.Todo == nil {
+			break
+		}
+
+		return e.complexity.TodoTag.Todo(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -242,6 +297,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewTag,
 		ec.unmarshalInputNewTodo,
+		ec.unmarshalInputNewTodoTag,
 		ec.unmarshalInputNewUser,
 	)
 	first := true
@@ -358,11 +414,27 @@ extend type Mutation {
   createTag(input: NewTag!): Tag!
 }
 `, BuiltIn: false},
+	{Name: "../schema/todo_tag.graphqls", Input: `type TodoTag {
+  id: ID!
+  todo: Todo! 
+  tag: Tag!
+}
+
+input NewTodoTag {
+  todoId: String!
+  tagId: String!
+}
+
+extend type Mutation {
+  createTodoTag(input: NewTodoTag!): TodoTag!
+}
+`, BuiltIn: false},
 	{Name: "../schema/todos.graphqls", Input: `type Todo {
   id: ID!
   text: String!
   done: Boolean!
   user: User!
+  tags: [TodoTag!]!
 }
 
 
@@ -422,6 +494,29 @@ func (ec *executionContext) field_Mutation_createTag_argsInput(
 	}
 
 	var zeroVal model.NewTag
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_createTodoTag_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_createTodoTag_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_createTodoTag_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.NewTodoTag, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNNewTodoTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐNewTodoTag(ctx, tmp)
+	}
+
+	var zeroVal model.NewTodoTag
 	return zeroVal, nil
 }
 
@@ -721,6 +816,69 @@ func (ec *executionContext) fieldContext_Mutation_createTag(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createTodoTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTodoTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTodoTag(rctx, fc.Args["input"].(model.NewTodoTag))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.TodoTag)
+	fc.Result = res
+	return ec.marshalNTodoTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodoTag(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createTodoTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TodoTag_id(ctx, field)
+			case "todo":
+				return ec.fieldContext_TodoTag_todo(ctx, field)
+			case "tag":
+				return ec.fieldContext_TodoTag_tag(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TodoTag", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTodoTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createTodo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createTodo(ctx, field)
 	if err != nil {
@@ -768,6 +926,8 @@ func (ec *executionContext) fieldContext_Mutation_createTodo(ctx context.Context
 				return ec.fieldContext_Todo_done(ctx, field)
 			case "user":
 				return ec.fieldContext_Todo_user(ctx, field)
+			case "tags":
+				return ec.fieldContext_Todo_tags(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 		},
@@ -894,6 +1054,8 @@ func (ec *executionContext) fieldContext_Query_todos(ctx context.Context, field 
 				return ec.fieldContext_Todo_done(ctx, field)
 			case "user":
 				return ec.fieldContext_Todo_user(ctx, field)
+			case "tags":
+				return ec.fieldContext_Todo_tags(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 		},
@@ -1419,6 +1581,210 @@ func (ec *executionContext) fieldContext_Todo_user(_ context.Context, field grap
 				return ec.fieldContext_User_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Todo_tags(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Todo_tags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Todo().Tags(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TodoTag)
+	fc.Result = res
+	return ec.marshalNTodoTag2ᚕgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodoTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Todo_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Todo",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TodoTag_id(ctx, field)
+			case "todo":
+				return ec.fieldContext_TodoTag_todo(ctx, field)
+			case "tag":
+				return ec.fieldContext_TodoTag_tag(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TodoTag", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TodoTag_id(ctx context.Context, field graphql.CollectedField, obj *model.TodoTag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TodoTag_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TodoTag_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TodoTag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TodoTag_todo(ctx context.Context, field graphql.CollectedField, obj *model.TodoTag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TodoTag_todo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.TodoTag().Todo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Todo)
+	fc.Result = res
+	return ec.marshalNTodo2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TodoTag_todo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TodoTag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Todo_id(ctx, field)
+			case "text":
+				return ec.fieldContext_Todo_text(ctx, field)
+			case "done":
+				return ec.fieldContext_Todo_done(ctx, field)
+			case "user":
+				return ec.fieldContext_Todo_user(ctx, field)
+			case "tags":
+				return ec.fieldContext_Todo_tags(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TodoTag_tag(ctx context.Context, field graphql.CollectedField, obj *model.TodoTag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TodoTag_tag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.TodoTag().Tag(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Tag)
+	fc.Result = res
+	return ec.marshalNTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTag(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TodoTag_tag(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TodoTag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "tagName":
+				return ec.fieldContext_Tag_tagName(ctx, field)
+			case "user":
+				return ec.fieldContext_Tag_user(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
 	}
 	return fc, nil
@@ -3517,6 +3883,40 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewTodoTag(ctx context.Context, obj any) (model.NewTodoTag, error) {
+	var it model.NewTodoTag
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"todoId", "tagId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "todoId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("todoId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TodoID = data
+		case "tagId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TagID = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj any) (model.NewUser, error) {
 	var it model.NewUser
 	asMap := map[string]any{}
@@ -3574,6 +3974,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createTodoTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTodoTag(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3794,6 +4201,153 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Todo_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "tags":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Todo_tags(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var todoTagImplementors = []string{"TodoTag"}
+
+func (ec *executionContext) _TodoTag(ctx context.Context, sel ast.SelectionSet, obj *model.TodoTag) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, todoTagImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TodoTag")
+		case "id":
+			out.Values[i] = ec._TodoTag_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "todo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TodoTag_todo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "tag":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TodoTag_tag(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4280,6 +4834,11 @@ func (ec *executionContext) unmarshalNNewTodo2githubᚗcomᚋericgrandtᚋgqlgen
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNNewTodoTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐNewTodoTag(ctx context.Context, v any) (model.NewTodoTag, error) {
+	res, err := ec.unmarshalInputNewTodoTag(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNNewUser2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐNewUser(ctx context.Context, v any) (model.NewUser, error) {
 	res, err := ec.unmarshalInputNewUser(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4334,6 +4893,54 @@ func (ec *executionContext) marshalNTodo2ᚕgithubᚗcomᚋericgrandtᚋgqlgen�
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNTodo2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodo(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTodoTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodoTag(ctx context.Context, sel ast.SelectionSet, v model.TodoTag) graphql.Marshaler {
+	return ec._TodoTag(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTodoTag2ᚕgithubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodoTagᚄ(ctx context.Context, sel ast.SelectionSet, v []model.TodoTag) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTodoTag2githubᚗcomᚋericgrandtᚋgqlgenᚑexampleᚋgraphᚋmodelᚐTodoTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

@@ -6,9 +6,6 @@ package resolver
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
-	"math/big"
 
 	"github.com/ericgrandt/gqlgen-example/graph/model"
 	"github.com/ericgrandt/gqlgen-example/middleware"
@@ -16,18 +13,16 @@ import (
 
 // CreateTag is the resolver for the createTag field.
 func (r *mutationResolver) CreateTag(ctx context.Context, input model.NewTag) (model.Tag, error) {
-	randNumber, _ := rand.Int(rand.Reader, big.NewInt(10000))
 	tag := model.Tag{
-		ID:      fmt.Sprintf("%d", randNumber),
 		TagName: input.TagName,
 		UserID:  middleware.GetUserContext(ctx).ID,
 	}
 
-	stmt, err := r.db.Prepare("INSERT INTO tag(id, user_id, tag_name) VALUES (?, ?, ?)")
+	stmt, err := r.db.Prepare("INSERT INTO tag(user_id, tag_name) VALUES (?, ?)")
 	if err != nil {
 		panic(err)
 	}
-	_, err = stmt.Exec(tag.ID, tag.UserID, tag.TagName)
+	_, err = stmt.Exec(tag.UserID, tag.TagName)
 	if err != nil {
 		panic(err)
 	}

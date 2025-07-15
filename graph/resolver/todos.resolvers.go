@@ -6,8 +6,7 @@ package resolver
 
 import (
 	"context"
-	"crypto/rand"
-	"math/big"
+	"fmt"
 
 	"github.com/ericgrandt/gqlgen-example/graph/generated"
 	"github.com/ericgrandt/gqlgen-example/graph/model"
@@ -16,19 +15,17 @@ import (
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (model.Todo, error) {
-	randNumber, _ := rand.Int(rand.Reader, big.NewInt(10000))
 	todo := model.Todo{
 		Text:   input.Text,
-		ID:     randNumber.String(),
 		UserID: middleware.GetUserContext(ctx).ID,
 	}
 
-	stmt, err := r.db.Prepare("INSERT INTO todo(id, value, user_id) VALUES (?, ?, ?)")
+	stmt, err := r.db.Prepare("INSERT INTO todo(value, user_id) VALUES (?, ?)")
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = stmt.Exec(todo.ID, todo.Text, todo.UserID)
+	_, err = stmt.Exec(todo.Text, todo.UserID)
 	if err != nil {
 		panic(err)
 	}
@@ -55,6 +52,29 @@ func (r *queryResolver) Todos(ctx context.Context, pageSize int32, pageNum int32
 // User is the resolver for the user field.
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (model.User, error) {
 	return r.userData.GetUser(obj.UserID)
+}
+
+// Tags is the resolver for the tags field.
+func (r *todoResolver) Tags(ctx context.Context, obj *model.Todo) ([]model.TodoTag, error) {
+	stmt, err := r.db.Prepare("SELECT * FROM todo_tag WHERE todo_id = ?")
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(1)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	var tags []model.TodoTag
+	for rows.Next() {
+		var todoTag model.TodoTag
+		rows.Scan(&todoTag.ID, &todoTag.TodoID, &todoTag.TagID)
+		tags = append(tags, todoTag)
+	}
+	return tags, nil
 }
 
 // Todo returns generated.TodoResolver implementation.

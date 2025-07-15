@@ -1,0 +1,14 @@
+type TodoTag {
+  id: ID!
+  todo: Todo! 
+  tag: Tag!
+}
+
+input NewTodoTag {
+  todoId: String!
+  tagId: String!
+}
+
+extend type Mutation {
+  createTodoTag(input: NewTodoTag!): TodoTag!
+}
